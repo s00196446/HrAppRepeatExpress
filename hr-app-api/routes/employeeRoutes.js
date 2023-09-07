@@ -1,4 +1,3 @@
-// employeeRoutes.js
 const express = require('express');
 const router = express.Router();
 const EmployeeController = require('../employeeController');
