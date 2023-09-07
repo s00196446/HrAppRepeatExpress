@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const port = 5000;
-const cors = require('cors'); // Import the cors package
+const cors = require('cors');
 
 app.use(cors());
 app.use(express.json());
@@ -18,13 +18,10 @@ db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
-// Define Mongoose models and schemas for your data here
 const Employee = require('./models/employee.model');
 
-// Placeholder data (remove when you connect to MongoDB)
 
   
-// Define your routes in separate route files for better organization
 const employeeRoutes = require('./routes/employeeRoutes');
 app.use('/api/employee-hours', employeeRoutes);
   
