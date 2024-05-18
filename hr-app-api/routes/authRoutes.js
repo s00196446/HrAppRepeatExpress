@@ -1,30 +1,47 @@
-//authRoutes.js//
-
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const User = require('../models/user.model');
 
-// Dummy user data (replace with actual user data from your database)
+// Dummy user data
 const users = [
   { id: 1, username: 'user1', password: 'password1', role: 'user' },
   { id: 2, username: 'admin1', password: 'adminpassword1', role: 'admin' }
 ];
 
-router.post('/login', (req, res) => {
-  // Extract username and password from request body
+router.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
-  // Find user in the users array by username and password
-  const user = users.find(u => u.username === username && u.password === password);
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const newUser = new User({ username, password: hashedPassword });
 
-  if (user) {
-    // If user is found, generate JWT token
-    const token = jwt.sign({ sub: user.id, username: user.username, role: user.role }, 'secretkey', { expiresIn: '1h' });
-    res.status(200).json({ access_token: token });
-  } else {
-    // If user is not found, return unauthorized status
-    res.status(401).json({ message: 'Unauthorized' });
+  newUser.save((err) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error registering new user' });
+    }
+    res.status(200).json({ message: 'User registered successfully' });
+  });
+});
+
+
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  const user = await User.findOne({ username });
+
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized' });
   }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const token = jwt.sign({ sub: user._id, username: user.username, role: user.role }, 'secretkey', { expiresIn: '1h' });
+  res.status(200).json({ access_token: token });
 });
 
 module.exports = router;
