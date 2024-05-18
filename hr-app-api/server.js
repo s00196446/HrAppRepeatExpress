@@ -1,3 +1,5 @@
+/*server.js*/
+
 const express = require('express');
 const app = express();
 const port = 5000;
@@ -5,6 +7,12 @@ const cors = require('cors');
 
 app.use(cors());
 app.use(express.json());
+
+const authRoutes = require('./routes/authRoutes');
+const employeeRoutes = require('./routes/employeeRoutes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/employee-hours', employeeRoutes);
 
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://127.0.0.1:27017/HrApp', { 
@@ -20,10 +28,6 @@ db.once('open', () => {
 
 const Employee = require('./models/employee.model');
 
-
-  
-const employeeRoutes = require('./routes/employeeRoutes');
-app.use('/api/employee-hours', employeeRoutes);
   
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
