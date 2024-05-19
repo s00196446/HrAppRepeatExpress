@@ -1,47 +1,50 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const User = require('../models/user.model');
 
-// Dummy user data
-const users = [
-  { id: 1, username: 'user1', password: 'password1', role: 'user' },
-  { id: 2, username: 'admin1', password: 'adminpassword1', role: 'admin' }
-];
-
+// Register new user
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = new User({ username, password: hashedPassword });
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({
+      username,
+      password: hashedPassword
+    });
 
-  newUser.save((err) => {
-    if (err) {
-      return res.status(500).json({ message: 'Error registering new user' });
-    }
-    res.status(200).json({ message: 'User registered successfully' });
-  });
+    await user.save();
+
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error });
+  }
 });
 
-
+// Login existing user
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
-  const user = await User.findOne({ username });
+  try {
+    const user = await User.findOne({ username });
 
-  if (!user) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    if (!user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const token = jwt.sign({ sub: user._id, username: user.username }, 'secretkey', { expiresIn: '1h' });
+    res.status(200).json({ access_token: token });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error });
   }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-
-  if (!isMatch) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-
-  const token = jwt.sign({ sub: user._id, username: user.username, role: user.role }, 'secretkey', { expiresIn: '1h' });
-  res.status(200).json({ access_token: token });
 });
 
 module.exports = router;
