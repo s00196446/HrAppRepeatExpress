@@ -4,6 +4,7 @@ const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const config = require('config');
 
 // Register route
 router.post('/register', async (req, res) => {
@@ -33,7 +34,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, 'your_jwt_secret', { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user._id, role: user.role }, config.get('jwtSecret'), { expiresIn: '1h' });
     res.json({ access_token: token });
   } catch (error) {
     console.error('Server error:', error);

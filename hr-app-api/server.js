@@ -1,11 +1,10 @@
+// server.js
 const express = require('express');
 const app = express();
 const port = 5000;
 const cors = require('cors');
 const mongoose = require('mongoose');
 const config = require('config');
-
-const db = config.get('mongoURI');
 
 app.use(cors());
 app.use(express.json());
@@ -16,14 +15,14 @@ const employeeRoutes = require('./routes/employeeRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 
-mongoose.connect(db, { 
+mongoose.connect(config.get('mongoURI'), { 
     useNewUrlParser: true, 
     useUnifiedTopology: true 
 });
 
-const dbConnection = mongoose.connection;
-dbConnection.on('error', console.error.bind(console, 'MongoDB connection error:'));
-dbConnection.once('open', () => {
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
